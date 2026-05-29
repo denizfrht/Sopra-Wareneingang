@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>Datenbankstatus</h1>
+        <p>Prüfung der benötigten Views für das Modul Wareneingang und Lieferantenrechnung.</p>
+    </div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Schema</th>
+            <th>View</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for view in view_status %}
+        <tr>
+            <td>{{ view.schema }}</td>
+            <td>{{ view.view_name }}</td>
+            <td>
+                {% if view.exists %}
+                    <span class="db-ok">vorhanden</span>
+                {% else %}
+                    <span class="db-missing">fehlt noch</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

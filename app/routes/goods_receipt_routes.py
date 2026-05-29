@@ -1,0 +1,112 @@
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+
+from app.services.goods_receipt_service import (
+    get_all_goods_receipts,
+    create_goods_receipt,
+    get_goods_receipt_by_id,
+    get_items_by_goods_receipt_id,
+    create_goods_receipt_item,
+    update_goods_receipt_status,
+)
+from app.services.purchase_order_service import get_purchase_orders
+from app.services.condition_service import get_goods_conditions, suggest_condition_id
+
+goods_receipt_bp = Blueprint("goods_receipt", __name__)
+
+
+@goods_receipt_bp.route("/")
+def index():
+    return redirect(url_for("goods_receipt.goods_receipts"))
+
+
+@goods_receipt_bp.route("/wareneingang", methods=["GET", "POST"])
+def goods_receipts():
+    if request.method == "POST":
+        po_id = request.form.get("po_id")
+        receipt_date = request.form.get("receipt_date")
+        delivery_note_no = request.form.get("delivery_note_no")
+
+        success, message = create_goods_receipt(
+            po_id=po_id,
+            receipt_date=receipt_date,
+            delivery_note_no=delivery_note_no
+        )
+
+        flash(message, "success" if success else "error")
+        return redirect(url_for("goods_receipt.goods_receipts"))
+
+    return render_template(
+        "goods_receipts.html",
+        goods_receipts=get_all_goods_receipts(),
+        purchase_orders=get_purchase_orders()
+    )
+
+
+@goods_receipt_bp.route("/wareneingang/<goods_receipt_id>")
+def goods_receipt_detail(goods_receipt_id):
+    goods_receipt = get_goods_receipt_by_id(goods_receipt_id)
+
+    if goods_receipt is None:
+        flash("Wareneingang wurde nicht gefunden.", "error")
+        return redirect(url_for("goods_receipt.goods_receipts"))
+
+    items = get_items_by_goods_receipt_id(goods_receipt_id)
+    conditions = get_goods_conditions()
+
+    return render_template(
+        "goods_receipts.html",
+        goods_receipts=get_all_goods_receipts(),
+        purchase_orders=get_purchase_orders(),
+        selected_goods_receipt=goods_receipt,
+        goods_receipt_items=items,
+        conditions=conditions
+    )
+
+
+@goods_receipt_bp.route("/wareneingang/<goods_receipt_id>/position", methods=["POST"])
+def add_goods_receipt_item(goods_receipt_id):
+    po_item_id = request.form.get("po_item_id")
+    article = request.form.get("article")
+    ordered_qty = request.form.get("ordered_qty")
+    received_qty = request.form.get("received_qty")
+    condition_id = request.form.get("condition_id")
+    damaged = request.form.get("damaged") == "on"
+    wrong_delivery = request.form.get("wrong_delivery") == "on"
+
+    success, message = create_goods_receipt_item(
+    goods_receipt_id=goods_receipt_id,
+    po_item_id=po_item_id,
+    article=article,
+    ordered_qty=ordered_qty,
+    received_qty=received_qty,
+    condition_id=condition_id,
+    damaged=damaged,
+    wrong_delivery=wrong_delivery
+)
+
+    flash(message, "success" if success else "error")
+
+    return redirect(
+        url_for(
+            "goods_receipt.goods_receipt_detail",
+            goods_receipt_id=goods_receipt_id
+        )
+    )
+
+@goods_receipt_bp.route("/wareneingang/<goods_receipt_id>/status", methods=["POST"])
+def change_goods_receipt_status(goods_receipt_id):
+    target_status = request.form.get("target_status")
+
+    success, message = update_goods_receipt_status(
+        goods_receipt_id=goods_receipt_id,
+        target_status=target_status
+    )
+
+    flash(message, "success" if success else "error")
+
+    return redirect(
+        url_for(
+            "goods_receipt.goods_receipt_detail",
+            goods_receipt_id=goods_receipt_id
+        )
+    )
