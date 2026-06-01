@@ -94,7 +94,7 @@
         <div><strong>Lieferdatum:</strong> {{ selected_goods_receipt.RECEIPT_DATE }}</div>
         <div><strong>Lieferschein:</strong> {{ selected_goods_receipt.DELIVERY_NOTE_NO }}</div>
     </div>
-
+    {% if current_role == "WARENEINGANG" or current_role == "ADMIN" %}
     <div class="status-actions">
 
     {% if selected_goods_receipt.STATUS == 200 %}
@@ -145,6 +145,12 @@
 
     </div>
 
+    {% else %}
+    <p class="hint">
+        Für Statusänderungen im Wareneingang wird die Rolle Wareneingang oder Admin benötigt.
+    </p>
+    
+    {% endif %}
 
     <hr>
 

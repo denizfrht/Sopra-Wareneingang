@@ -14,7 +14,34 @@
     <nav>
     <a href="{{ url_for('goods_receipt.goods_receipts') }}">Wareneingang</a>
     <a href="{{ url_for('supplier_invoice.supplier_invoices') }}">Lieferantenrechnung</a>
-    <a href="{{ url_for('db_status.db_status') }}">DB-Status</a>
+
+    <form method="POST" action="{{ url_for('goods_receipt.change_role') }}" class="role-form">
+        <label for="role">Rolle:</label>
+
+        <select name="role" id="role">
+            <option value="WARENEINGANG" {% if current_role == "WARENEINGANG" %}selected{% endif %}>
+                Wareneingang
+            </option>
+            <option value="BUCHHALTUNG" {% if current_role == "BUCHHALTUNG" %}selected{% endif %}>
+                Buchhaltung
+            </option>
+            <option value="ADMIN" {% if current_role == "ADMIN" %}selected{% endif %}>
+                Admin
+            </option>
+        </select>
+
+        <input
+            type="password"
+            name="password"
+            class="role-password"
+            placeholder="Passwort"
+            required
+        >
+
+        <button type="submit" class="role-button">
+            Wechseln
+        </button>
+    </form>
     </nav>
 </header>
 

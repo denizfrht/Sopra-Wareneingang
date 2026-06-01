@@ -102,7 +102,7 @@
             <td>{{ invoice.INVOICE_STATUS }}</td>
             <td>{{ invoice.INVOICE_STATUS_NAME }}</td>
             <td>
-                {% if invoice.INVOICE_STATUS == 300 %}
+                {% if invoice.INVOICE_STATUS == 300 and (current_role == "BUCHHALTUNG" or current_role == "ADMIN") %}
                     <form method="POST" action="{{ url_for('supplier_invoice.transmit_invoice', invoice_id=invoice.INVOICE_ID) }}">
                         <button class="small-button" type="submit">
                             An Buchhaltung übermitteln

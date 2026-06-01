@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 
 from app.services.goods_receipt_service import (
     get_all_goods_receipts,
@@ -110,3 +110,36 @@ def change_goods_receipt_status(goods_receipt_id):
             goods_receipt_id=goods_receipt_id
         )
     )
+
+@goods_receipt_bp.route("/rolle-wechseln", methods=["POST"])
+def change_role():
+    """
+    Einfacher Rollenwechsel für den Prototyp.
+
+    Für jede Rolle gibt es ein eigenes Passwort.
+    Nur wenn Rolle und Passwort zusammenpassen, wird die Rolle in der Session gespeichert.
+
+    Später könnte das durch ein echtes Login-/Rechtesystem ersetzt werden.
+    """
+
+    role = request.form.get("role")
+    password = request.form.get("password")
+
+    role_passwords = {
+        "WARENEINGANG": "we123",
+        "BUCHHALTUNG": "buch123",
+        "ADMIN": "admin123",
+    }
+
+    if role not in role_passwords:
+        flash("Ungültige Rolle.", "error")
+        return redirect(request.referrer or url_for("goods_receipt.goods_receipts"))
+
+    if password != role_passwords[role]:
+        flash("Falsches Passwort für diese Rolle.", "error")
+        return redirect(request.referrer or url_for("goods_receipt.goods_receipts"))
+
+    session["current_role"] = role
+    flash(f"Rolle wurde auf {role} gesetzt.", "success")
+
+    return redirect(request.referrer or url_for("goods_receipt.goods_receipts"))

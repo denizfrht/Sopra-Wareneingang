@@ -263,3 +263,41 @@ hr {
     border-radius: 5px;
     font-weight: bold;
 }
+
+.role-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 24px;
+    color: white;
+}
+
+.role-form label {
+    font-size: 14px;
+}
+
+.role-form select,
+.role-password {
+    padding: 5px;
+    border-radius: 5px;
+    border: none;
+    font-size: 13px;
+}
+
+.role-password {
+    width: 95px;
+}
+
+.role-button {
+    background-color: #4b5563;
+    color: white;
+    border: none;
+    padding: 6px 9px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.role-button:hover {
+    background-color: #374151;
+}

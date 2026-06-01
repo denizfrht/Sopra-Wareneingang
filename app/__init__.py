@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session
 from app.routes.db_status_routes import db_status_bp
 
 def create_app():
@@ -6,6 +6,11 @@ def create_app():
 
     # Wird später z. B. für Flash-Meldungen/Formulare gebraucht
     app.config["SECRET_KEY"] = "dev-secret-key"
+    @app.context_processor
+    def inject_user_role():
+        return {
+            "current_role": session.get("current_role", "WARENEINGANG")
+        }
 
     # Routen importieren
     from app.routes.goods_receipt_routes import goods_receipt_bp
