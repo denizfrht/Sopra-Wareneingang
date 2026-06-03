@@ -301,3 +301,21 @@ hr {
 .role-button:hover {
     background-color: #374151;
 }
+
+.table-input,
+.table-select {
+    width: 100%;
+    padding: 6px;
+    font-size: 13px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.table-input[readonly] {
+    background-color: #f3f4f6;
+    color: #555;
+}
+
+td form {
+    margin: 0;
+}

@@ -53,3 +53,7 @@ def db_status():
         "db_status.html",
         view_status=view_status
     )
+
+@goods_receipt_bp.route("/test")
+def test():
+    return "Flask funktioniert"

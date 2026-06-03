@@ -154,106 +154,81 @@
 
     <hr>
 
-    <h3>+ Wareneingangsposition hinzufügen</h3>
 
-    <form method="POST" action="{{ url_for('goods_receipt.add_goods_receipt_item', goods_receipt_id=selected_goods_receipt.GOODS_RECEIPT_ID) }}">
-
-        <div class="form-row">
-            <label for="po_item_id">PO_ITEM_ID</label>
-            <input type="number" name="po_item_id" id="po_item_id" required>
-        </div>
-
-        <div class="form-row">
-            <label for="article">Artikel / Komponente</label>
-            <input type="text" name="article" id="article" placeholder="z. B. Schraube M8" required>
-        </div>
-
-        <div class="form-row">
-            <label for="ordered_qty">Bestellte Menge</label>
-            <input type="number" step="0.01" name="ordered_qty" id="ordered_qty" required>
-        </div>
-
-        <div class="form-row">
-            <label for="received_qty">Gelieferte Menge</label>
-            <input type="number" step="0.01" name="received_qty" id="received_qty" required>
-        </div>
-
-<div class="form-row checkbox-row">
-    <label>
-        <input type="checkbox" id="damaged" name="damaged">
-        Ware beschädigt
-    </label>
-
-    <label>
-        <input type="checkbox" id="wrong_delivery" name="wrong_delivery">
-        Falschlieferung
-    </label>
-</div>
-
-<div class="form-row">
-    <label for="condition_id">Condition-Vorschlag</label>
-    <select name="condition_id" id="condition_id" required>
-        <option value="">Bitte Condition auswählen</option>
-
-        {% for condition in conditions %}
-            <option value="{{ condition.CONDITION_ID }}">
-                {{ condition.CONDITION_ID }} – {{ condition.CONDITION_NAME }}
-            </option>
-        {% endfor %}
-    </select>
-
-    <small class="hint">
-        Die Condition wird automatisch vorgeschlagen, kann aber manuell geändert werden.
-    </small>
-</div>
-
-        <button class="primary-button" type="submit">
-            Position speichern
-        </button>
-
-    </form>
 
     <h3>Wareneingangspositionen</h3>
 
-    <table>
-        <thead>
-            <tr>
-                <th>GOODS_RECEIPT_ITEM_ID</th>
-                <th>PO_ITEM_ID</th>
-                <th>Artikel</th>
-                <th>Bestellt</th>
-                <th>Geliefert</th>
-                <th>CONDITION_ID</th>
-                <th>CONDITION_NAME</th>
-            </tr>
-        </thead>
+<p class="hint">
+    Die Positionen werden automatisch aus den Bestellpositionen übernommen.
+    Bitte trage pro Position die gelieferte Menge und die passende Condition ein.
+</p>
 
-        <tbody>
-            {% for item in goods_receipt_items %}
-            <tr>
+<table>
+    <thead>
+        <tr>
+            <th>GOODS_RECEIPT_ITEM_ID</th>
+            <th>PO_ITEM_ID</th>
+            <th>Artikel</th>
+            <th>Bestellt</th>
+            <th>Geliefert</th>
+            <th>Condition</th>
+            <th>Beschädigt</th>
+            <th>Falschlieferung</th>
+            <th>Aktion</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for item in goods_receipt_items %}
+        <tr>
+            <form method="POST" action="{{ url_for('goods_receipt.edit_goods_receipt_item', goods_receipt_item_id=item.GOODS_RECEIPT_ITEM_ID) }}">
+                <input type="hidden" name="goods_receipt_id" value="{{ selected_goods_receipt.GOODS_RECEIPT_ID }}">
+
                 <td>{{ item.GOODS_RECEIPT_ITEM_ID }}</td>
                 <td>{{ item.PO_ITEM_ID }}</td>
                 <td>{{ item.ARTICLE }}</td>
-                <td>{{ item.ORDERED_QTY }}</td>
-                <td>{{ item.RECEIVED_QTY }}</td>
-                <td>{{ item.CONDITION_ID }}</td>
-                <td>{{ item.CONDITION_NAME }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                <td>
+                    <input class="table-input ordered-qty" type="number" step="0.01" value="{{ item.ORDERED_QTY }}" readonly>
+                </td>
+                <td>
+                    <input class="table-input received-qty" type="number" step="0.01" name="received_qty" value="{{ item.RECEIVED_QTY }}" required>
+                </td>
+                <td>
+                    <select class="table-select condition-id" name="condition_id" required>
+                        {% for condition in conditions %}
+                            <option value="{{ condition.CONDITION_ID }}"
+                                {% if condition.CONDITION_ID == item.CONDITION_ID %}selected{% endif %}>
+                                {{ condition.CONDITION_ID }} – {{ condition.CONDITION_NAME }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <input class="damaged-checkbox" type="checkbox" name="damaged">
+                </td>
+                <td>
+                    <input class="wrong-delivery-checkbox" type="checkbox" name="wrong_delivery">
+                </td>
+                <td>
+                    <button class="small-button" type="submit">Speichern</button>
+                </td>
+            </form>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 </section>
 
 {% endif %}
 
 <script>
-    function suggestConditionId() {
-        const orderedQtyInput = document.getElementById("ordered_qty");
-        const receivedQtyInput = document.getElementById("received_qty");
-        const conditionSelect = document.getElementById("condition_id");
-        const damagedCheckbox = document.getElementById("damaged");
-        const wrongDeliveryCheckbox = document.getElementById("wrong_delivery");
+    function calculateSuggestedCondition(row) {
+        const orderedQtyInput = row.querySelector(".ordered-qty");
+        const receivedQtyInput = row.querySelector(".received-qty");
+        const conditionSelect = row.querySelector(".condition-id");
+        const damagedCheckbox = row.querySelector(".damaged-checkbox");
+        const wrongDeliveryCheckbox = row.querySelector(".wrong-delivery-checkbox");
 
         if (!orderedQtyInput || !receivedQtyInput || !conditionSelect) {
             return;
@@ -288,26 +263,29 @@
         conditionSelect.value = suggestedConditionId;
     }
 
-    const orderedQtyInput = document.getElementById("ordered_qty");
-    const receivedQtyInput = document.getElementById("received_qty");
-    const damagedCheckbox = document.getElementById("damaged");
-    const wrongDeliveryCheckbox = document.getElementById("wrong_delivery");
+    document.querySelectorAll("tbody tr").forEach(function(row) {
+        const receivedQtyInput = row.querySelector(".received-qty");
+        const damagedCheckbox = row.querySelector(".damaged-checkbox");
+        const wrongDeliveryCheckbox = row.querySelector(".wrong-delivery-checkbox");
 
-    if (orderedQtyInput) {
-        orderedQtyInput.addEventListener("input", suggestConditionId);
-    }
+        if (receivedQtyInput) {
+            receivedQtyInput.addEventListener("input", function() {
+                calculateSuggestedCondition(row);
+            });
+        }
 
-    if (receivedQtyInput) {
-        receivedQtyInput.addEventListener("input", suggestConditionId);
-    }
+        if (damagedCheckbox) {
+            damagedCheckbox.addEventListener("change", function() {
+                calculateSuggestedCondition(row);
+            });
+        }
 
-    if (damagedCheckbox) {
-        damagedCheckbox.addEventListener("change", suggestConditionId);
-    }
-
-    if (wrongDeliveryCheckbox) {
-        wrongDeliveryCheckbox.addEventListener("change", suggestConditionId);
-    }
+        if (wrongDeliveryCheckbox) {
+            wrongDeliveryCheckbox.addEventListener("change", function() {
+                calculateSuggestedCondition(row);
+            });
+        }
+    });
 </script>
 
 {% endblock %}

@@ -7,6 +7,8 @@ from app.services.goods_receipt_service import (
     get_items_by_goods_receipt_id,
     create_goods_receipt_item,
     update_goods_receipt_status,
+    ensure_goods_receipt_items_exist,
+    update_goods_receipt_item,
 )
 from app.services.purchase_order_service import get_purchase_orders
 from app.services.condition_service import get_goods_conditions, suggest_condition_id
@@ -49,6 +51,11 @@ def goods_receipt_detail(goods_receipt_id):
     if goods_receipt is None:
         flash("Wareneingang wurde nicht gefunden.", "error")
         return redirect(url_for("goods_receipt.goods_receipts"))
+
+    success, message = ensure_goods_receipt_items_exist(goods_receipt_id)
+
+    if not success:
+        flash(message, "error")
 
     items = get_items_by_goods_receipt_id(goods_receipt_id)
     conditions = get_goods_conditions()
@@ -143,3 +150,28 @@ def change_role():
     flash(f"Rolle wurde auf {role} gesetzt.", "success")
 
     return redirect(request.referrer or url_for("goods_receipt.goods_receipts"))
+
+@goods_receipt_bp.route("/wareneingang/position/<goods_receipt_item_id>/edit", methods=["POST"])
+def edit_goods_receipt_item(goods_receipt_item_id):
+    goods_receipt_id = request.form.get("goods_receipt_id")
+    received_qty = request.form.get("received_qty")
+    condition_id = request.form.get("condition_id")
+    damaged = request.form.get("damaged") == "on"
+    wrong_delivery = request.form.get("wrong_delivery") == "on"
+
+    success, message = update_goods_receipt_item(
+        goods_receipt_item_id=goods_receipt_item_id,
+        received_qty=received_qty,
+        condition_id=condition_id,
+        damaged=damaged,
+        wrong_delivery=wrong_delivery
+    )
+
+    flash(message, "success" if success else "error")
+
+    return redirect(
+        url_for(
+            "goods_receipt.goods_receipt_detail",
+            goods_receipt_id=goods_receipt_id
+        )
+    )
